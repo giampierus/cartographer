@@ -598,8 +598,12 @@ and Health filter by Map inside the page).
 The reading panel folds the concept's outline into *On this page*, drops the
 body's leading title (the header shows it) and hides a trailing links section
 that lists nothing the *Links* tab does not already show (D287). The *Links*
-tab lists links by title — *Links to*, *Linked from*, and *Used by* for the
-artifacts that reference the concept.
+tab lists links by title — *Links to*, *Linked from*, *Supersede chain* (the
+concept's successor and the concepts it replaces, D744) and *Used by* for the
+artifacts that reference the concept. The *History* tab, read when it is first
+opened, lists the commits that changed the concept (`concept_history`: subject,
+date, author, agent, recorded reason) and, for an expanded concept, its assets
+(`asset_list`).
 
 Activity, Work and Health are reading panels built from one page kit (D339):
 a header that says the answer in a sentence with its count in bold (long
@@ -723,6 +727,32 @@ the panel or switching KB forgets them, and the identity itself is not kept
 after the decryption. A key that is not a recipient of any file is reported as
 such. Like the Artifacts panel it exists only for a principal that can read the
 whole KB.
+
+The **Library** panel (D744) lists what the KB keeps besides its graph, each
+section read with the tool an agent uses: the *Contradictions* that block
+`commit_gate` (the non-gap kinds of `contradiction_report`, every resolution
+status; gaps stay in Health), the *Source ledger* (`source_list`, every ingest
+status, with how many concepts cite each source), the *Services* and the *Path
+placeholders*: every `{{path:…}}`/`{{repo:…}}` key `paths.yaml` declares, with
+its description, default and remote, the concepts and artifact files that cite
+it, the keys cited but not declared, malformed entries, and the other mounted
+KBs that declare the same key with a different default or remote. The
+per-machine resolution lives on the client, so the section points at
+`cartographer paths list`. A row opens its concept on the atlas.
+
+The **Settings** panel (D744) shows how the server and the KB are set up,
+read-only: the server version (and a newer release when one exists), *Who is
+looking* (the principal and its rules), *Git and replication* and
+*Capabilities* from `kb_status` — each capability with its state and the
+`config.yaml` key that controls it —, the KBs mounted on the server, the *Map
+contracts* (`map_list`: kind, ontology mode, concept types, effective
+`stale_after`, accepted checks, field values), open *Git conflicts*
+(`conflicts_list`), the *Journal* (the last entries of `log.md`) and, for an
+admin, the *Audit log* of this KB's tool calls. Nothing is editable there: a
+setting changes in `config.yaml` and takes effect when the server restarts.
+
+Both panels leave out a section the reader may not see (a narrowed principal,
+or the static demo where it was not exported) instead of reporting an error.
 
 ### Runtime secrets
 

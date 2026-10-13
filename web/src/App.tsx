@@ -32,6 +32,8 @@ import type {
 } from "./api/types";
 import { Artifacts } from "./components/Artifacts";
 import { Secrets } from "./components/Secrets";
+import { Library } from "./components/Library";
+import { Settings } from "./components/Settings";
 import { AuthPrompt } from "./components/AuthPrompt";
 import { CommandPalette } from "./components/CommandPalette";
 import { GraphView } from "./components/GraphView";
@@ -687,6 +689,7 @@ export function App() {
 
   const inspector = (
     <Inspector
+      kb={activeKB}
       conceptId={view.concept}
       concept={concept}
       error={conceptError}
@@ -791,6 +794,24 @@ export function App() {
               kb={activeKB}
               reloadKey={`${reloadKey}:${live}`}
               titleOf={(id) => nodeTitles.get(id)}
+              onOpenConcept={(id) => navigate({ panel: "atlas", concept: id })}
+              onRetry={() => setReloadKey((k) => k + 1)}
+              onFailure={handleFailure}
+            />
+          ) : view.panel === "library" && activeKB ? (
+            <Library
+              kb={activeKB}
+              reloadKey={`${reloadKey}:${live}`}
+              titleOf={(id) => nodeTitles.get(id)}
+              onOpenConcept={(id) => navigate({ panel: "atlas", concept: id })}
+              onRetry={() => setReloadKey((k) => k + 1)}
+              onFailure={handleFailure}
+            />
+          ) : view.panel === "settings" && activeKB ? (
+            <Settings
+              kb={activeKB}
+              kbs={kbs}
+              reloadKey={`${reloadKey}:${live}`}
               onOpenConcept={(id) => navigate({ panel: "atlas", concept: id })}
               onRetry={() => setReloadKey((k) => k + 1)}
               onFailure={handleFailure}

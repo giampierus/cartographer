@@ -5,6 +5,12 @@
 export interface KBCapability {
   state: string;
   setting: string;
+  /** The checks an auto_repair capability covers (D299). */
+  checks?: string[];
+  /** The setting is the product default, not a value the operator wrote (D323). */
+  default?: boolean;
+  /** auto_repair checks skipped unattended because their fix is not safe (D355). */
+  ignored?: string[];
 }
 
 export interface KBSummary {
@@ -177,6 +183,10 @@ export interface Concept {
   /** Skills, agents and hooks that reference this concept explicitly; absent
    *  for a principal that cannot see the whole KB. */
   used_by?: { kind: string; name: string }[];
+  /** Visible concepts whose superseded_by names this one (D744). */
+  supersedes?: string[];
+  /** This concept's successor, when the reader may see it. */
+  superseded_by?: string;
 }
 
 export type Severity = "info" | "warning" | "error";
@@ -276,6 +286,30 @@ export interface KBStatus {
   /** resolved: the same search now finds something (D319); sorted last. */
   search_misses?: { query: string; count: number; last_seen?: string; resolved?: boolean }[];
   stale_count?: number;
+  // The server and replication facts the Settings panel shows (D744): the
+  // same kb_status an agent reads.
+  kb?: string;
+  total?: number;
+  open_contradictions?: number;
+  git_workflow?: string;
+  has_remote?: boolean;
+  remote_url?: string;
+  git_sync?: boolean;
+  push_state?: string;
+  push_last_error?: string;
+  unpushed_commits?: number;
+  behind_commits?: number;
+  last_push_at?: string;
+  last_sync_in_at?: string;
+  base_branch?: string;
+  working_branch?: string;
+  pr_number?: number;
+  pr_url?: string;
+  last_forge_error?: string;
+  capabilities?: Record<string, KBCapability>;
+  server_version?: string;
+  latest_version?: string;
+  sources?: Record<string, number>;
 }
 
 /** GET /kbs/{kb}/maintenance/summary (D323). */
@@ -367,4 +401,128 @@ export interface SecretFile {
 
 export interface SecretList {
   files: SecretFile[];
+}
+
+/** GET /kbs/{kb}/contracts (D744): map_list, every visible Map and Journal
+ *  with its contract (D107, D229, D343, D346). */
+export interface MapContract {
+  name: string;
+  title?: string;
+  kind?: string;
+  ontology_mode?: string;
+  concept_types?: string[];
+  lint_ignore?: string[];
+  expanded_concepts: number;
+  stale_after?: number;
+  stale_after_defaulted?: boolean;
+  field_values?: Record<string, string[]>;
+  field_values_by_type?: Record<string, Record<string, string[]>>;
+}
+
+/** GET /kbs/{kb}/sources: the source ledger. */
+export interface SourceEntry {
+  id: string;
+  title?: string;
+  source_kind?: string;
+  ingest_status: string;
+  timestamp?: string;
+  cited_by: number;
+  cited_by_ids: string[];
+}
+
+/** GET /kbs/{kb}/contradictions: the non-gap kinds, which block commit_gate. */
+export interface ContradictionEntry {
+  id: string;
+  title?: string;
+  involves?: string[];
+  contradiction_kind?: string;
+  resolution_status: string;
+}
+
+export interface ServiceEntry {
+  id: string;
+  title?: string;
+  status?: string;
+}
+
+/** GET /kbs/{kb}/conflicts: open git rebase conflicts. */
+export interface GitConflict {
+  concept_id: string;
+  path: string;
+  branch: string;
+  files: string[];
+  detected_at: string;
+  kind?: string;
+  guidance: string;
+  pr_url?: string;
+}
+
+/** GET /kbs/{kb}/history?id=: concept_history. */
+export interface ConceptRevision {
+  sha: string;
+  at: string;
+  author: string;
+  subject: string;
+  path: string;
+  agent?: string;
+  reason?: string;
+}
+export interface ConceptHistory {
+  id: string;
+  revisions: ConceptRevision[];
+  truncated: boolean;
+  note?: string;
+}
+
+export interface AssetEntry {
+  path: string;
+  size: number;
+  sha256: string;
+  executable: boolean;
+  oversized?: boolean;
+}
+
+/** GET /kbs/{kb}/paths (issue 742): the declared side of the path placeholders. */
+export interface PathKey {
+  id: string;
+  kind: string;
+  key: string;
+  declared: boolean;
+  description?: string;
+  default?: string;
+  remote?: string;
+  cited_by: string[];
+  artifacts: string[];
+  conflicts?: { kb: string; default?: string; remote?: string }[];
+}
+export interface PathMapping {
+  present: boolean;
+  unparseable: boolean;
+  malformed: string[];
+  keys: PathKey[];
+}
+
+/** GET /kbs/{kb}/audit: admin only. */
+export interface AuditEntry {
+  at: string;
+  phase?: string;
+  principal?: string;
+  transport?: string;
+  tool: string;
+  read_only?: boolean;
+  resources?: Record<string, string>;
+  outcome: string;
+  duration_ms?: number;
+  commit_sha?: string;
+}
+export interface AuditLog {
+  enabled: boolean;
+  entries: AuditEntry[];
+}
+
+/** GET /whoami: who is looking. */
+export interface WhoAmI {
+  id: string;
+  admin: boolean;
+  permissions: { kb: string; write: boolean; maps?: string[]; journals?: string[]; types?: string[] }[];
 }

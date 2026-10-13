@@ -38,7 +38,9 @@ export type IconName =
   | "lock"
   | "unlock"
   | "alert"
-  | "offline";
+  | "offline"
+  | "library"
+  | "settings";
 
 const PATHS: Record<IconName, string> = {
   // Three places and the routes between them.
@@ -86,8 +88,13 @@ const PATHS: Record<IconName, string> = {
   copy: "M9 9h10.5v10.5H9z M5 15V4.5h10.5",
   lock: "M6 11h12v9H6z M8.5 11V8a3.5 3.5 0 0 1 7 0v3",
   alert: "M12 4 3.5 19h17z M12 10v4 M12 16.5h.01",
-  offline: "M3.5 3.5l17 17 M7 18.5h9.5a3.5 3.5 0 0 0 1.6-6.6 M6.2 9.4A5.5 5.5 0 0 0 7 18.5 M9.5 6.2A5.5 5.5 0 0 1 17.8 10.2",
+  offline:
+    "M3.5 3.5l17 17 M7 18.5h9.5a3.5 3.5 0 0 0 1.6-6.6 M6.2 9.4A5.5 5.5 0 0 0 7 18.5 M9.5 6.2A5.5 5.5 0 0 1 17.8 10.2",
   unlock: "M6 11h12v9H6z M8.5 11V8a3.5 3.5 0 0 1 6.8-1.2",
+  // Books on a shelf: the records a KB keeps besides its concepts.
+  library: "M5 4.5h3v15H5z M10 4.5h3v15h-3z M15.2 5.3l2.9-.8 3.4 14.5-2.9.8z",
+  // Three sliders: how the server and the KB are set up.
+  settings: "M4 7h9 M17 7h3 M4 12h3 M11 12h9 M4 17h11 M19 17h1 M15 5v4 M9 10v4 M17 15v4",
 };
 
 const DOTS: Partial<Record<IconName, [number, number, number][]>> = {

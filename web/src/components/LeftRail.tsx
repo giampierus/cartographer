@@ -124,6 +124,21 @@ export function LeftRail({
             {problems > 0 && <span className="rail__dot" aria-hidden="true" />}
           </button>
         </li>
+        <li>
+          <button
+            type="button"
+            className="rail__panel"
+            aria-label="Library"
+            title={collapsed ? "Library" : undefined}
+            aria-current={panel === "library" ? "page" : undefined}
+            onClick={() => onPanel("library")}
+          >
+            <span className="rail__glyph">
+              <Icon name="library" />
+            </span>
+            <span className="rail__label">Library</span>
+          </button>
+        </li>
         {artifactsTotal !== null && (
           <li>
             <button
@@ -158,6 +173,21 @@ export function LeftRail({
             </button>
           </li>
         )}
+        <li>
+          <button
+            type="button"
+            className="rail__panel"
+            aria-label="Settings"
+            title={collapsed ? "Settings" : undefined}
+            aria-current={panel === "settings" ? "page" : undefined}
+            onClick={() => onPanel("settings")}
+          >
+            <span className="rail__glyph">
+              <Icon name="settings" />
+            </span>
+            <span className="rail__label">Settings</span>
+          </button>
+        </li>
       </ul>
 
       {!collapsed && (

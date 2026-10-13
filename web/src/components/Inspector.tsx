@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { fetchAssets, fetchHistory } from "../api/client";
 import type { Concept, LintFinding } from "../api/types";
+import { useResource } from "../lib/useResource";
 import { withoutRedundantLinksSection } from "../lib/linksection";
 import { collectionVar } from "../lib/palette";
 import { Markdown } from "./Markdown";
@@ -7,6 +9,8 @@ import { ErrorState, Skeleton } from "./States";
 import { SeverityBadge } from "./SeverityBadge";
 
 interface Props {
+  /** The KB the concept is in: the History tab reads its timeline. */
+  kb?: string | null;
   conceptId: string | null;
   concept: Concept | null;
   error: unknown;
@@ -31,9 +35,10 @@ function withoutLeadingTitle(body: string): string {
   return body.replace(/^\s*#\s+[^\n]*\n+/, "");
 }
 
-type Tab = "content" | "links" | "meta";
+type Tab = "content" | "links" | "history" | "meta";
 
 export function Inspector({
+  kb = null,
   conceptId,
   concept,
   error,
@@ -65,8 +70,13 @@ export function Inspector({
       }
     }
   };
-  const linkCount =
-    (concept?.outbound.length ?? 0) + (concept?.inbound.length ?? 0) + (concept?.used_by?.length ?? 0);
+  const linkCount = (concept?.outbound.length ?? 0) + (concept?.inbound.length ?? 0) + (concept?.used_by?.length ?? 0);
+
+  // The timeline and the assets are read when the History tab is first
+  // opened for a concept, not on every selection (D744).
+  const historyKey = tab === "history" && kb && conceptId ? `${kb}:${conceptId}` : null;
+  const history = useResource(historyKey, (s) => fetchHistory(kb!, conceptId!, s));
+  const assets = useResource(historyKey, (s) => fetchAssets(kb!, conceptId!, s));
 
   // A new concept always opens on its content: carrying the previous tab over
   // means a user who opened "Links" once never sees a body again.
@@ -104,7 +114,7 @@ export function Inspector({
       </header>
 
       <div className="inspector__tabs" role="tablist" aria-label="Concept sections">
-        {(["content", "links", "meta"] as Tab[]).map((name) => (
+        {((kb ? ["content", "links", "history", "meta"] : ["content", "links", "meta"]) as Tab[]).map((name) => (
           <button
             key={name}
             type="button"
@@ -115,7 +125,7 @@ export function Inspector({
             className="inspector__tab"
             onClick={() => setTab(name)}
           >
-            {name === "content" ? "Content" : name === "links" ? "Links" : "Metadata"}
+            {name === "content" ? "Content" : name === "links" ? "Links" : name === "history" ? "History" : "Metadata"}
             {name === "links" && linkCount > 0 && <span className="inspector__tab-count">{linkCount}</span>}
           </button>
         ))}
@@ -194,6 +204,31 @@ export function Inspector({
                 onNavigate={onNavigate}
                 onPreview={onPreview}
               />
+              {(!!concept.superseded_by || !!concept.supersedes?.length) && (
+                <section className="inspector__group">
+                  <h3 className="inspector__group-title">Supersede chain</h3>
+                  {concept.superseded_by && (
+                    <>
+                      <p className="inspector__hint">Superseded: read its successor instead.</p>
+                      <ul className="inspector__links">
+                        <SupersedeLink
+                          id={concept.superseded_by}
+                          label="Superseded by"
+                          titleOf={titleOf}
+                          onNavigate={onNavigate}
+                        />
+                      </ul>
+                    </>
+                  )}
+                  {!!concept.supersedes?.length && (
+                    <ul className="inspector__links">
+                      {concept.supersedes.map((id) => (
+                        <SupersedeLink key={id} id={id} label="Supersedes" titleOf={titleOf} onNavigate={onNavigate} />
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              )}
               {!!concept.used_by?.length && (
                 <section className="inspector__group">
                   <h3 className="inspector__group-title">
@@ -209,7 +244,9 @@ export function Inspector({
                           onClick={() => onOpenArtifact?.(a.kind, a.name)}
                           disabled={!onOpenArtifact}
                         >
-                          <span className="inspector__link-kind" aria-hidden="true">◆</span>
+                          <span className="inspector__link-kind" aria-hidden="true">
+                            ◆
+                          </span>
                           <span className="inspector__link-text">
                             <span className="inspector__link-title">{a.name}</span>
                             <span className="inspector__link-id">{a.kind}</span>
@@ -239,6 +276,59 @@ export function Inspector({
                 </section>
               )}
             </div>
+
+            {kb && (
+              <div role="tabpanel" id="panel-history" aria-labelledby="tab-history" hidden={tab !== "history"}>
+                <section className="inspector__group">
+                  <h3 className="inspector__group-title">
+                    Changes {history.data && <span className="inspector__count">{history.data.revisions.length}</span>}
+                  </h3>
+                  {history.loading && !history.data ? (
+                    <Skeleton lines={3} label="Loading the history" />
+                  ) : history.error ? (
+                    <ErrorState error={history.error} />
+                  ) : history.absent || !history.data ? (
+                    <p className="inspector__hint">No history to show.</p>
+                  ) : history.data.revisions.length === 0 ? (
+                    <p className="inspector__hint">
+                      {history.data.note ? "This KB keeps no git history." : "No commit has touched this concept."}
+                    </p>
+                  ) : (
+                    <ol className="inspector__timeline">
+                      {history.data.revisions.map((r) => (
+                        <li key={r.sha} className="inspector__revision">
+                          <span className="inspector__revision-subject">{r.subject}</span>
+                          <span className="inspector__revision-meta">
+                            <time dateTime={r.at}>{new Date(r.at).toLocaleDateString()}</time> · {r.author}
+                            {r.agent && <> · {r.agent}</>} · <code>{r.sha.slice(0, 7)}</code>
+                          </span>
+                          {r.reason && <span className="inspector__revision-reason">{r.reason}</span>}
+                        </li>
+                      ))}
+                      {history.data.truncated && <li className="inspector__hint">Older changes are not shown.</li>}
+                    </ol>
+                  )}
+                </section>
+                {!!assets.data?.assets.length && (
+                  <section className="inspector__group">
+                    <h3 className="inspector__group-title">
+                      Assets <span className="inspector__count">{assets.data.assets.length}</span>
+                    </h3>
+                    <p className="inspector__hint">Non-Markdown files kept beside this expanded concept.</p>
+                    <ul className="inspector__assets">
+                      {assets.data.assets.map((a) => (
+                        <li key={a.path}>
+                          <code>{a.path}</code>
+                          <span className="inspector__asset-size">{formatBytes(a.size)}</span>
+                          {a.executable && <span className="chip chip--static">executable</span>}
+                          {a.oversized && <span className="chip chip--broken">oversized</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+              </div>
+            )}
 
             <div role="tabpanel" id="panel-meta" aria-labelledby="tab-meta" hidden={tab !== "meta"}>
               <dl className="inspector__meta">
@@ -307,7 +397,11 @@ function LinkGroup({
                   onFocus={() => onPreview(id)}
                   onBlur={() => onPreview(null)}
                 >
-                  <span className="inspector__link-swatch" aria-hidden="true" style={{ background: collectionVar(collection) }} />
+                  <span
+                    className="inspector__link-swatch"
+                    aria-hidden="true"
+                    style={{ background: collectionVar(collection) }}
+                  />
                   <span className="inspector__link-text">
                     <span className="inspector__link-title">{title ?? shortName(id)}</span>
                     <span className="inspector__link-id">{id}</span>
@@ -320,6 +414,40 @@ function LinkGroup({
       )}
     </section>
   );
+}
+
+function SupersedeLink({
+  id,
+  label,
+  titleOf,
+  onNavigate,
+}: {
+  id: string;
+  label: string;
+  titleOf(id: string): string | undefined;
+  onNavigate(id: string): void;
+}) {
+  return (
+    <li>
+      <button type="button" className="inspector__link" onClick={() => onNavigate(id)}>
+        <span className="inspector__link-kind" aria-hidden="true">
+          ↻
+        </span>
+        <span className="inspector__link-text">
+          <span className="inspector__link-title">{titleOf(id) ?? shortName(id)}</span>
+          <span className="inspector__link-id">
+            {label} · {id}
+          </span>
+        </span>
+      </button>
+    </li>
+  );
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function shortName(id: string): string {

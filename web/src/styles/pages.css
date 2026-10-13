@@ -1856,3 +1856,196 @@ button.row {
   margin: 0;
   font: inherit;
 }
+
+/* --- Library and Settings (D744) --- */
+
+.library__glyph {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  color: var(--text-muted);
+}
+
+.library__involves {
+  color: var(--text-secondary);
+}
+
+.library__involves + .library__involves::before {
+  content: "· ";
+  color: var(--text-muted);
+}
+
+.library__warn {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--sev-warning) 10%, transparent);
+  border-inline-start: 2px solid var(--sev-warning);
+  border-radius: var(--radius-small);
+}
+
+.library__paths,
+.settings__contracts {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.library__path,
+.settings__contract {
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+}
+
+.library__path-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.library__placeholder {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.library__path-desc {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.library__path-facts,
+.settings__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+}
+
+.library__path-facts dt,
+.settings__fact dt {
+  color: var(--text-muted);
+}
+
+.library__path-facts dd,
+.settings__fact dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* A fact is one grid row: the dt and dd of its wrapper sit in the columns. */
+.settings__fact {
+  display: contents;
+}
+
+.library__cited {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.library__cited-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.settings__table {
+  width: 100%;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  border-collapse: collapse;
+}
+
+.settings__table th,
+.settings__table td {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  text-align: start;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settings__table thead th {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.settings__table tbody th {
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.settings__default {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.settings__checks {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+.settings__fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.settings__rule {
+  cursor: default;
+}
+
+.settings__journal {
+  max-height: 360px;
+  margin: var(--space-2) 0 0;
+  padding: var(--space-3);
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+  background: var(--surface-1);
+  border-radius: var(--radius-card);
+}
+
+.settings__journal:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (max-width: 640px) {
+  .settings__audit thead {
+    display: none;
+  }
+
+  .settings__audit tr {
+    display: grid;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .settings__audit td {
+    padding: 0;
+    border: 0;
+  }
+}

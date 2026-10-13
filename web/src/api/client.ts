@@ -14,6 +14,16 @@ import type {
   SearchResponse,
   WorkResponse,
   CheckCatalog,
+  AssetEntry,
+  AuditLog,
+  ConceptHistory,
+  ContradictionEntry,
+  GitConflict,
+  MapContract,
+  PathMapping,
+  ServiceEntry,
+  SourceEntry,
+  WhoAmI,
 } from "./types";
 import { STATIC_MODE, staticKey, staticSearch, staticURL } from "./static";
 
@@ -248,4 +258,55 @@ export function fetchArtifact(kb: string, kind: string, name: string, signal?: A
 
 export function fetchSecrets(kb: string, signal?: AbortSignal): Promise<SecretList> {
   return get<SecretList>(`/kbs/${encodeURIComponent(kb)}/secrets`, signal);
+}
+
+const kbPath = (kb: string, rest: string) => `/kbs/${encodeURIComponent(kb)}/${rest}`;
+
+/** Every visible Map and Journal with its contract (D744). */
+export function fetchContracts(kb: string, signal?: AbortSignal): Promise<MapContract[]> {
+  return get<MapContract[]>(kbPath(kb, "contracts"), signal);
+}
+
+/** The source ledger, every status. */
+export function fetchSources(kb: string, signal?: AbortSignal): Promise<SourceEntry[]> {
+  return get<SourceEntry[]>(kbPath(kb, "sources"), signal);
+}
+
+export function fetchContradictions(
+  kb: string,
+  signal?: AbortSignal,
+): Promise<{ contradictions: ContradictionEntry[] }> {
+  return get<{ contradictions: ContradictionEntry[] }>(kbPath(kb, "contradictions"), signal);
+}
+
+export function fetchServices(kb: string, signal?: AbortSignal): Promise<{ services: ServiceEntry[] }> {
+  return get<{ services: ServiceEntry[] }>(kbPath(kb, "services"), signal);
+}
+
+export function fetchConflicts(kb: string, signal?: AbortSignal): Promise<GitConflict[]> {
+  return get<GitConflict[]>(kbPath(kb, "conflicts"), signal);
+}
+
+export function fetchHistory(kb: string, id: string, signal?: AbortSignal): Promise<ConceptHistory> {
+  return get<ConceptHistory>(kbPath(kb, `history?id=${encodeURIComponent(id)}`), signal);
+}
+
+export function fetchAssets(kb: string, id: string, signal?: AbortSignal): Promise<{ assets: AssetEntry[] }> {
+  return get<{ assets: AssetEntry[] }>(kbPath(kb, `assets?id=${encodeURIComponent(id)}`), signal);
+}
+
+export function fetchJournal(kb: string, signal?: AbortSignal): Promise<{ text: string }> {
+  return get<{ text: string }>(kbPath(kb, "journal"), signal);
+}
+
+export function fetchPaths(kb: string, signal?: AbortSignal): Promise<PathMapping> {
+  return get<PathMapping>(kbPath(kb, "paths"), signal);
+}
+
+export function fetchAudit(kb: string, signal?: AbortSignal): Promise<AuditLog> {
+  return get<AuditLog>(kbPath(kb, "audit"), signal);
+}
+
+export function fetchWhoAmI(signal?: AbortSignal): Promise<WhoAmI> {
+  return get<WhoAmI>("/whoami", signal);
 }

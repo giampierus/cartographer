@@ -8,7 +8,7 @@
  * the bearer token never touches it.
  */
 
-export type Panel = "atlas" | "activity" | "work" | "health" | "artifacts" | "secrets";
+export type Panel = "atlas" | "activity" | "work" | "health" | "artifacts" | "secrets" | "library" | "settings";
 
 export interface ViewState {
   kb: string | null;
@@ -21,7 +21,14 @@ export interface ViewState {
   hmap: string | null;
 }
 
-export const EMPTY_VIEW: ViewState = { kb: null, scope: null, concept: null, panel: "atlas", artifact: null, hmap: null };
+export const EMPTY_VIEW: ViewState = {
+  kb: null,
+  scope: null,
+  concept: null,
+  panel: "atlas",
+  artifact: null,
+  hmap: null,
+};
 
 export function readViewState(search: string = window.location.search): ViewState {
   const params = new URLSearchParams(search);
@@ -31,7 +38,13 @@ export function readViewState(search: string = window.location.search): ViewStat
   const panel: Panel =
     param === "maintenance" || param === "observatory"
       ? "health"
-      : param === "activity" || param === "work" || param === "health" || param === "artifacts" || param === "secrets"
+      : param === "activity" ||
+          param === "work" ||
+          param === "health" ||
+          param === "artifacts" ||
+          param === "secrets" ||
+          param === "library" ||
+          param === "settings"
         ? param
         : "atlas";
   return {

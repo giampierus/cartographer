@@ -63,7 +63,7 @@ for (const viewport of [
       }
     });
 
-    for (const panel of ["activity", "work", "health"]) {
+    for (const panel of ["activity", "work", "health", "library", "settings"]) {
       test(`the ${panel} page`, async ({ page }) => {
         await page.goto(`${ATLAS}&panel=${panel}`);
         await expect(page.locator(".page")).toBeVisible();
@@ -74,7 +74,10 @@ for (const viewport of [
     test("no page wider than the screen", async ({ page }) => {
       // The top bar once set a 750px minimum: on a phone the browser widened
       // the whole page to fit it, and every view spilled off the right edge.
-      for (const url of [ATLAS, ...["activity", "work", "health", "artifacts"].map((p) => `${ATLAS}&panel=${p}`)]) {
+      for (const url of [
+        ATLAS,
+        ...["activity", "work", "health", "artifacts", "library", "settings"].map((p) => `${ATLAS}&panel=${p}`),
+      ]) {
         await page.goto(url);
         await expect(page.locator(".topbar")).toBeVisible();
         const [scroll, inner] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);

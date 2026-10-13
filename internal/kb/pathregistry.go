@@ -328,8 +328,23 @@ var pathRegistryArtifactRoots = []string{"skills", "agents", "hooks", "mcp", "in
 // declared key used?" that concepts do not answer (D263). Symlinks are not
 // followed, and an unreadable entry is skipped: a lint input, not a gate.
 func (kb *KB) ArtifactPlaceholders() ([]string, error) {
-	seen := map[string]bool{}
-	var out []string
+	cited, err := kb.ArtifactPlaceholderCitations()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(cited))
+	for id := range cited {
+		out = append(out, id)
+	}
+	sort.Strings(out)
+	return out, nil
+}
+
+// ArtifactPlaceholderCitations is ArtifactPlaceholders with the files that
+// cite each placeholder: "kind:key" → sorted KB-relative slash paths. The
+// Atlas's path mapping shows who cites a key (D744).
+func (kb *KB) ArtifactPlaceholderCitations() (map[string][]string, error) {
+	out := map[string][]string{}
 	for _, rel := range pathRegistryArtifactRoots {
 		root := filepath.Join(kb.Root, rel)
 		err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
@@ -343,11 +358,12 @@ func (kb *KB) ArtifactPlaceholders() ([]string, error) {
 			if readErr != nil {
 				return nil
 			}
+			relPath, relErr := filepath.Rel(kb.Root, path)
+			if relErr != nil {
+				return nil
+			}
 			for _, id := range okf.Placeholders(string(data)) {
-				if !seen[id] {
-					seen[id] = true
-					out = append(out, id)
-				}
+				out[id] = append(out[id], filepath.ToSlash(relPath))
 			}
 			return nil
 		})
@@ -355,6 +371,8 @@ func (kb *KB) ArtifactPlaceholders() ([]string, error) {
 			return nil, err
 		}
 	}
-	sort.Strings(out)
+	for id := range out {
+		sort.Strings(out[id])
+	}
 	return out, nil
 }

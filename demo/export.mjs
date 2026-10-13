@@ -66,7 +66,14 @@ for (const c of overview.collections) await api(`${k}/graph?scope=${q(c.name)}`)
 const index = [];
 for (const node of graph.nodes) {
   const concept = await api(`${k}/concept?id=${q(node.id)}`);
-  index.push({ id: concept.id, title: concept.title, body: plain(concept.body) });
+  index.push({
+    id: concept.id,
+    title: concept.title,
+    body: plain(concept.body),
+  });
+  // The Inspector's timeline and assets (D744).
+  await api(`${k}/history?id=${q(node.id)}`);
+  await api(`${k}/assets?id=${q(node.id)}`);
 }
 save("search-index", index);
 
@@ -76,7 +83,24 @@ for (const since of ["1d", "7d", "30d", "90d", "365d", "36500d"]) {
   await api(`${k}/changes?since=${q(since)}&limit=500`);
 }
 await api(`${k}/work?limit=200`);
-for (const p of ["maintenance/summary", "maintenance/review", "checks", "revision", "births", "status", "secrets"]) {
+// The audit log and /whoami are left out on purpose: the export runs as the
+// local admin, and neither describes anything a visitor of the demo is.
+for (const p of [
+  "maintenance/summary",
+  "maintenance/review",
+  "checks",
+  "revision",
+  "births",
+  "status",
+  "secrets",
+  "contracts",
+  "sources",
+  "contradictions",
+  "services",
+  "conflicts",
+  "journal",
+  "paths",
+]) {
   await api(`${k}/${p}`);
 }
 
