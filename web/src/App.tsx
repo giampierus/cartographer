@@ -809,10 +809,7 @@ export function App() {
             />
           ) : view.panel === "settings" && activeKB ? (
             <Settings
-              kb={activeKB}
-              kbs={kbs}
               reloadKey={`${reloadKey}:${live}`}
-              onOpenConcept={(id) => navigate({ panel: "atlas", concept: id })}
               onRetry={() => setReloadKey((k) => k + 1)}
               onFailure={handleFailure}
             />

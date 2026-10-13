@@ -85,9 +85,17 @@ func cmdServe(args []string) int {
 		log.Fatal(err)
 	}
 
+	servedConfig, servedConfigPath = cfg, envFallback(*configFlag, "CARTOGRAPHER_CONFIG")
 	runServe(cfg)
 	return 0
 }
+
+// servedConfig and servedConfigPath are what GET /api/ui/v1/config shows: the
+// resolved configuration and the file it was loaded from ("" when none).
+var (
+	servedConfig     *config.Config
+	servedConfigPath string
+)
 
 // loadServeConfig resolves the effective *config.Config for `serve`:
 // YAML (if a config path is given) → env overrides → explicit flag overrides.
@@ -634,6 +642,7 @@ func serveHTTP(addr string, boot func(phase func(string)) kbBootstrap, authCfg c
 				// without the UI is better than refusing to start.
 				log.Printf("warning: the embedded web UI is unusable, serving without it: %v", err)
 			} else {
+				multi.SetServerConfig(servedConfig, servedConfigPath)
 				multi.EnableWeb(static)
 				webMounted = true
 				log.Printf("Atlas UI on http://%s%s", displayAddr(addr), webui.MountPath)

@@ -526,3 +526,36 @@ export interface WhoAmI {
   admin: boolean;
   permissions: { kb: string; write: boolean; maps?: string[]; journals?: string[]; types?: string[] }[];
 }
+
+/** GET /config: one setting of the server, with its default and how to set it. */
+export interface ConfigEntry {
+  path: string;
+  key: string;
+  value: unknown;
+  default: string;
+  is_default: boolean;
+  doc?: string;
+  values?: string[];
+  env?: string;
+  flag?: string;
+  secret: boolean;
+}
+
+export interface ConfigItem {
+  title: string;
+  entries: ConfigEntry[];
+}
+
+export interface ConfigSection {
+  key: string;
+  title: string;
+  doc?: string;
+  entries?: ConfigEntry[];
+  items?: ConfigItem[];
+}
+
+export interface ServerConfig {
+  source: string;
+  yaml: string;
+  sections: ConfigSection[];
+}

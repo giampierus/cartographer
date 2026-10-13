@@ -23,6 +23,7 @@ import type {
   PathMapping,
   ServiceEntry,
   SourceEntry,
+  ServerConfig,
   WhoAmI,
 } from "./types";
 import { STATIC_MODE, staticKey, staticSearch, staticURL } from "./static";
@@ -305,6 +306,11 @@ export function fetchPaths(kb: string, signal?: AbortSignal): Promise<PathMappin
 
 export function fetchAudit(kb: string, signal?: AbortSignal): Promise<AuditLog> {
   return get<AuditLog>(kbPath(kb, "audit"), signal);
+}
+
+/** GET /config: the server's configuration (admin only; the demo has none). */
+export function fetchServerConfig(signal?: AbortSignal): Promise<ServerConfig> {
+  return get<ServerConfig>("/config", signal);
 }
 
 export function fetchWhoAmI(signal?: AbortSignal): Promise<WhoAmI> {

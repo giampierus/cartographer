@@ -88,47 +88,76 @@ describe("the explore panels", () => {
     expect(screen.getByText(/No two concepts disagree/)).toBeInTheDocument();
   });
 
-  it("Settings shows the server, the capabilities, who is looking and the audit log", async () => {
+  const serverConfig = {
+    source: "/etc/cartographer/config.yaml",
+    yaml: "# Git replication\ngit:\n  sync: true\n",
+    sections: [
+      {
+        key: "git",
+        title: "Git",
+        doc: "How KBs replicate.",
+        entries: [
+          {
+            path: "git.sync",
+            key: "sync",
+            value: true,
+            default: "true",
+            is_default: true,
+            doc: "Push and pull automatically.",
+            env: "CARTOGRAPHER_GIT_SYNC",
+            flag: "--git-sync",
+            secret: false,
+          },
+          {
+            path: "git.workflow",
+            key: "workflow",
+            value: "pr",
+            default: "local",
+            is_default: false,
+            values: ["local", "pr"],
+            secret: false,
+          },
+        ],
+      },
+      {
+        key: "kbs",
+        title: "Knowledge bases",
+        items: [
+          {
+            title: "kb-a",
+            entries: [{ path: "kbs[0].path", key: "path", value: "/data/kb-a", default: "", is_default: false, secret: false }],
+          },
+        ],
+      },
+    ],
+  };
+
+  it("Settings shows the server's configuration, as an overview and as YAML", async () => {
     window.history.replaceState(null, "", "/ui/?kb=kb-a&panel=settings");
     stubApi({
-      "/status": () =>
-        json({
-          server_version: "1.2.3",
-          has_remote: true,
-          remote_url: "gitlab.example.com/team/kb-a",
-          git_workflow: "local",
-          git_sync: true,
-          push_state: "clean",
-          unpushed_commits: 0,
-          behind_commits: 0,
-          capabilities: {
-            secrets: { state: "enabled", setting: "kbs[].sops_age_key_file or sops.age_key_file" },
-            write_gate: { state: "warning", setting: "kbs[].write_gate", default: true },
-          },
-        }),
-      "/whoami": () => json({ id: "user", admin: false, permissions: [{ kb: "kb-a", write: false, maps: ["infra"] }] }),
-      "/contracts": () =>
-        json([{ name: "infra", title: "Infrastructure", kind: "map", ontology_mode: "strict", expanded_concepts: 1 }]),
-      "/conflicts": () => json([]),
-      "/journal": () => json({ text: "- 2026-10-01 created infra/a\n" }),
-      "/audit": () =>
-        json({
-          enabled: true,
-          entries: [{ at: "2026-10-01T10:00:00Z", principal: "user", tool: "concept_read", outcome: "success" }],
-        }),
+      "/whoami": () => json({ id: "user", admin: true, permissions: [] }),
+      "/config": () => json(serverConfig),
     });
     render(<App />);
-    expect(await screen.findByText("Cartographer 1.2.3, serving kb-a.")).toBeInTheDocument();
-    expect(screen.getByText("gitlab.example.com/team/kb-a")).toBeInTheDocument();
-    expect(screen.getByText("kbs[].write_gate")).toBeInTheDocument();
-    expect(await screen.findByText("maps: infra")).toBeInTheDocument();
-    const contracts = screen.getByRole("heading", { name: /Map contracts/ }).closest("section")!;
-    expect(within(contracts).getByText("Infrastructure")).toBeInTheDocument();
-    expect(within(contracts).getByText("strict")).toBeInTheDocument();
-    expect(screen.getByText("No open rebase conflict.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Last entries of log.md")).toHaveTextContent("created infra/a");
-    const audit = screen.getByRole("heading", { name: /Audit log/ }).closest("section")!;
-    expect(within(audit).getByText("concept_read")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Git/ })).toBeInTheDocument();
+    expect(screen.getByText("/etc/cartographer/config.yaml")).toBeInTheDocument();
+    expect(screen.getByText("Push and pull automatically.")).toBeInTheDocument();
+    expect(screen.getByText("CARTOGRAPHER_GIT_SYNC")).toBeInTheDocument();
+    expect(screen.getAllByText("default")).toHaveLength(1);
+    expect(screen.getByText("/data/kb-a")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "YAML" }));
+    expect(screen.getByLabelText("Server configuration as YAML")).toHaveTextContent("sync: true");
+    expect(screen.getByRole("button", { name: "Copy" })).toBeInTheDocument();
+  });
+
+  it("Settings tells a non-admin that the configuration is for admins", async () => {
+    window.history.replaceState(null, "", "/ui/?kb=kb-a&panel=settings");
+    stubApi({
+      "/whoami": () => json({ id: "user", admin: false, permissions: [{ kb: "kb-a", write: false }] }),
+      "/config": notFound,
+    });
+    render(<App />);
+    expect(await screen.findByText("Only an admin can see the server's configuration.")).toBeInTheDocument();
   });
 
   it("the rail offers both panels", async () => {

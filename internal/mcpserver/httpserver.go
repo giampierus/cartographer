@@ -12,6 +12,7 @@ import (
 
 	"github.com/BeppeTemp/cartographer/internal/audit"
 	"github.com/BeppeTemp/cartographer/internal/auth"
+	"github.com/BeppeTemp/cartographer/internal/config"
 	"github.com/BeppeTemp/cartographer/internal/webui"
 )
 
@@ -275,6 +276,9 @@ type MultiKBServer struct {
 	// /api/ui/v1 is routed and both fall through to 404, restoring exactly the
 	// HTTP surface that existed before the UI.
 	web *webMount
+	// serverConfig and its file path back GET /api/ui/v1/config (SetServerConfig).
+	serverConfig     *config.Config
+	serverConfigPath string
 	// latestVersion is the /health source of a newer release (D254).
 	latestVersion func() string
 }
